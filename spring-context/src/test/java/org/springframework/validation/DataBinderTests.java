@@ -1994,7 +1994,7 @@ public class DataBinderTests {
 		mpv.add("age", "invalid");
 		binder.bind(mpv);
 		assertThat(binder.getBindingResult().getFieldError("age").getCode()).isEqualTo("errors.typeMismatch");
-		assertThat(BeanWrapper.class.cast(binder.getInternalBindingResult().getPropertyAccessor()).getAutoGrowCollectionLimit()).isEqualTo(512);
+		assertThat(((BeanWrapper) binder.getInternalBindingResult().getPropertyAccessor()).getAutoGrowCollectionLimit()).isEqualTo(512);
 	}
 
 	@Test // SPR-15009
@@ -2050,8 +2050,17 @@ public class DataBinderTests {
 		assertThatIllegalStateException().isThrownBy(() ->
 				binder.setMessageCodesResolver(new DefaultMessageCodesResolver()))
 			.withMessageContaining("DataBinder is already initialized with MessageCodesResolver");
-
 	}
+
+	@Test // gh-24347
+	public void overrideBindingResultType() {
+		TestBean testBean = new TestBean();
+		DataBinder binder = new DataBinder(testBean, "testBean");
+		binder.initDirectFieldAccess();
+		binder.initBeanPropertyAccess();
+		assertThat(binder.getBindingResult()).isInstanceOf(BeanPropertyBindingResult.class);
+	}
+
 
 	@SuppressWarnings("unused")
 	private static class BeanWithIntegerList {
